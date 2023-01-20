@@ -1,0 +1,40 @@
+const Alexa = require('ask-sdk-core');
+const https = require('https');
+
+const LaunchRequestHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
+  },
+  handle(handlerInput) {
+    const speechText = 'Welcome to the skill that interacts with ChatGPT, what can I do for you?';
+
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .reprompt(speechText)
+      .withSimpleCard('Welcome', speechText)
+      .getResponse();
+  },
+};
+
+const IntentRequestHandler = {
+    canHandle(handlerInput) {
+        return handlerInput.requestEnvelope.request.type === 'IntentRequest';
+    },
+    async handle(handlerInput) {
+        let response;
+        let speechText;
+        try {
+            // Get request parameters
+            const intent = handlerInput.requestEnvelope.request.intent;
+            const parameters = intent.slots;
+            
+            // Make request to ChatGPT API with parameters
+            response = await makeApiRequest(parameters);
+            speechText = response.data;
+        } catch (error) {
+            console.log(error);
+            speechText = 'Sorry, there was an error while interacting with ChatGPT. Please try again later.';
+        }
+        
+        return handlerInput.responseBuilder
+            .speak(
